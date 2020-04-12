@@ -13,17 +13,8 @@ Apache Flink最大的优势是通过Checkpointing和两段协议可以实现大�
 
 ##  ETL流程
 
-<div class="mermaid">
-graph LR
-A[Kafka] --> B(Flink)
-X["Kafka(Parse pattern)"] --> B
-B -- Parse --> C["Kafka(Formatted)"]
-C --> D(Flink)
-D --> E[ElasticSearch]
-D --> F[Hdfs]
-D --> G[Hbase]
-D --> H[...]
-</div>
+![parse-process](https://gitee.com/ysn2233/imgurls/raw/master/img/parse-process.png)
+
 
 以上是一个Flink ETL方案的流程图。
 
