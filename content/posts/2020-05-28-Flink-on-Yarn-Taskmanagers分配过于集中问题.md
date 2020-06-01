@@ -63,27 +63,6 @@ case NODE_UPDATE:
 而在`nodeUpdate()`方法中，RM会从NM中拉去Container的信息并进行处理。首先处理刚创建的Container，随后处理已经完成的，最后再调用`attempScheduling()`方法来进行Container的分配。
 
 ```java
-  
-```
-
-##### Continious Scheduling
-
-在上边的源码中我们可以看到，在最后分配容器的时候，如果启用了`continusSchedulingEnabled`(持续调度部署)，那么根据心跳分配容器的行为只会发生在存在已经完成的容器的情况下。那么如果启用了持续调度部署，新容器是怎么被分配的呢？
-
-在FairScheduler的初始化函数中，我们可以看到如果启用了持续调度部署，那调度器就会在后台启动一个新的线程来管理Container的分配。启用方式由Yarn的参数`yarn.scheduler.fair.continuous-scheduling-enabled`来进行设置。
-
-``` java
-//...
-if (continuousSchedulingEnabled) {
-   // start continuous scheduling thread
-   schedulingThread = new ContinuousSchedulingThread();
-   schedulingThread.setName("FairSchedulerContinuousScheduling");
-   schedulingThread.setDaemon(true);
-}
-//...
-```
-
-``` java
 private synchronized void nodeUpdate(RMNode nm) {
     long start = getClock().getTime();
     if (LOG.isDebugEnabled()) {
@@ -122,6 +101,40 @@ private synchronized void nodeUpdate(RMNode nm) {
 
     long duration = getClock().getTime() - start;
     fsOpDurations.addNodeUpdateDuration(duration);
+}
+```
+
+##### Continious Scheduling
+
+在上边的源码中我们可以看到，在最后分配容器的时候，如果启用了`continusSchedulingEnabled`(持续调度部署)，那么根据心跳分配容器的行为只会发生在存在已经完成的容器的情况下。那么如果启用了持续调度部署，新容器是怎么被分配的呢？
+
+在FairScheduler的初始化函数中，我们可以看到如果启用了持续调度部署，那调度器就会在后台启动一个新的线程来管理Container的分配。启用方式由Yarn的参数`yarn.scheduler.fair.continuous-scheduling-enabled`来进行设置。
+
+``` java
+//...
+if (continuousSchedulingEnabled) {
+   // start continuous scheduling thread
+   schedulingThread = new ContinuousSchedulingThread();
+   schedulingThread.setName("FairSchedulerContinuousScheduling");
+   schedulingThread.setDaemon(true);
+}
+//...
+```
+
+``` java
+private class ContinuousSchedulingThread extends Thread {
+    @Override
+    public void run() {
+      while (!Thread.currentThread().isInterrupted()) {
+        try {
+          continuousSchedulingAttempt();
+          Thread.sleep(getContinuousSchedulingSleepMs());
+        } catch (InterruptedException e) {
+          LOG.warn("Continuous scheduling thread interrupted. Exiting.", e);
+          return;
+        }
+      }
+    }
 }
 ```
 
