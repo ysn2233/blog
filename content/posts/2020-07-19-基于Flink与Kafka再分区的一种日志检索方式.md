@@ -2,7 +2,7 @@
 layout: post
 title: "基于Flink与Kafka再分区的一种日志检索方式"
 date: 2020-07-19T16:00:01+08:00
-categories: ["Apache Flink","Apache Kafka]
+categories: ["Apache Flink","Apache Kafka"]
 draft: false
 ---
 
